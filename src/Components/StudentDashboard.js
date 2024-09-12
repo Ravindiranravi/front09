@@ -1,111 +1,168 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import './StudentDashboard.css'; // Assuming you create a CSS file for styling
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import {
+  Container,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  Snackbar,
+  IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import "./StudentDashboard.css"
 
 const StudentDashboard = () => {
-    const [student, setStudent] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [editMode, setEditMode] = useState(false);
-    const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        contact: '',
-        gender: '',
-        dateOfBirth: '',
-        qualification: '',
-        address: '',
-        interestToStudy: ''
-    });
-    const fetchStudentDetails = async () => {
-        try {
-            const response = await axios.get(`http://localhost:5078/api/Admin/Students/${localStorage.getItem("studentId")}`);
-            setStudent(response.data);
-            setFormData(response.data);
-            setLoading(false);
-        } catch (err) {
-            setError('Failed to load student details.');
-            setLoading(false);
-        }
-    };
-    useEffect(() => {
-        // Fetch student details when the component mounts
+  const [student, setStudent] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // const studentResponse = await axios.get("https://localhost:7256/api/Student/{id}"); // Adjust the ID as needed
+        const coursesResponse = await axios.get("https://localhost:7256/api/Course");
+        const batchesResponse = await axios.get("https://localhost:7256/api/Batch");
         
-        fetchStudentDetails();
-    }, []);
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
+        // setStudent(studentResponse.data);
+        setCourses(coursesResponse.data);
+        setBatches(batchesResponse.data);
+      } catch (err) {
+        setError("Failed to fetch data.");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const handleUpdate = async (e) => {
-        e.preventDefault();
-        try {
-            await axios.put(`http://localhost:5078/api/Student/Update/${student.id}`, formData);
-            setStudent(formData);
-            setEditMode(false);
-        } catch (err) {
-            setError('Failed to update student details.');
+    fetchData();
+  }, []);
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+  if (loading) return <CircularProgress />;
+  if (error) return <Typography color="error">{error}</Typography>;
+
+  return (
+    <Container>
+      <Typography variant="h4" gutterBottom align="center" color="primary">
+        Student Dashboard
+      </Typography>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" gutterBottom>Student Information</Typography>
+              {student && (
+                <>
+                  <Typography><strong>Username:</strong> {student.Username}</Typography>
+                  <Typography><strong>Email:</strong> {student.Email}</Typography>
+                  <Typography><strong>Contact:</strong> {student.Contact}</Typography>
+                  <Typography><strong>Gender:</strong> {student.Gender}</Typography>
+                  <Typography><strong>Date of Birth:</strong> {new Date(student.DateOfBirth).toLocaleDateString()}</Typography>
+                  <Typography><strong>Address:</strong> {student.Address}</Typography>
+                  <Typography><strong>Qualification:</strong> {student.Qualification}</Typography>
+                  <Typography><strong>Interest to Study:</strong> {student.InterestToStudy}</Typography>
+                  <Typography><strong>Date of Join:</strong> {new Date(student.DateOfJoin).toLocaleDateString()}</Typography>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" gutterBottom>Courses</Typography>
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Course ID</TableCell>
+                      <TableCell>Course Name</TableCell>
+                      <TableCell>Duration</TableCell>
+                      <TableCell>Fees</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {courses.map((course) => (
+                      <TableRow key={course.CourseId}>
+                        <TableCell>{course.CourseId}</TableCell>
+                        <TableCell>{course.CourseName}</TableCell>
+                        <TableCell>{course.CourseDuration}</TableCell>
+                        <TableCell>{course.CourseFees}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" gutterBottom>Batches</Typography>
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Batch ID</TableCell>
+                      <TableCell>Batch Name</TableCell>
+                      <TableCell>Start Date</TableCell>
+                      <TableCell>Start Year</TableCell>
+                      <TableCell>End Year</TableCell>
+                      <TableCell>Course ID</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {batches.map((batch) => (
+                      <TableRow key={batch.BatchId}>
+                        <TableCell>{batch.BatchId}</TableCell>
+                        <TableCell>{batch.BatchName}</TableCell>
+                        <TableCell>{new Date(batch.StartDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{batch.StartYear}</TableCell>
+                        <TableCell>{batch.EndYear}</TableCell>
+                        <TableCell>{batch.CourseId}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+        action={
+          <IconButton size="small" color="inherit" onClick={handleSnackbarClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
         }
-    };
-
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>{error}</div>;
-
-    return (
-        <div className="dashboard-container">
-            <h1>Student Dashboard</h1>
-            <div className="student-details">
-                <h2>Your Details</h2>
-                {editMode ? (
-                    <form onSubmit={handleUpdate}>
-                        <label>Username</label>
-                        <input type="text" name="username" value={formData.username} onChange={handleChange} />
-
-                        <label>Email</label>
-                        <input type="email" name="email" value={formData.email} onChange={handleChange} />
-
-                        <label>Contact</label>
-                        <input type="text" name="contact" value={formData.contact} onChange={handleChange} />
-
-                        <label>Gender</label>
-                        <input type="text" name="gender" value={formData.gender} onChange={handleChange} />
-
-                        <label>Date of Birth</label>
-                        <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} />
-
-                        <label>Qualification</label>
-                        <input type="text" name="qualification" value={formData.qualification} onChange={handleChange} />
-
-                        <label>Address</label>
-                        <input type="text" name="address" value={formData.address} onChange={handleChange} />
-
-                        <label>Interest to Study</label>
-                        <input type="text" name="interestToStudy" value={formData.interestToStudy} onChange={handleChange} />
-
-                        <button type="submit">Update</button>
-                        <button type="button" onClick={() => setEditMode(false)}>Cancel</button>
-                    </form>
-                ) : (
-                    <>
-                        <p><strong>Username:</strong> {student.username}</p>
-                        <p><strong>Email:</strong> {student.email}</p>
-                        <p><strong>Contact:</strong> {student.contact}</p>
-                        <p><strong>Gender:</strong> {student.gender}</p>
-                        <p><strong>Date of Birth:</strong> {student.dateOfBirth}</p>
-                        <p><strong>Qualification:</strong> {student.qualification}</p>
-                        <p><strong>Address:</strong> {student.address}</p>
-                        <p><strong>Interest to Study:</strong> {student.interestToStudy}</p>
-
-                        <button onClick={() => setEditMode(true)}>Edit Details</button>
-                    </>
-                )}
-            </div>
-        </div>
-    );
+      />
+    </Container>
+  );
 };
 
 export default StudentDashboard;

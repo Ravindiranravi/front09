@@ -4,7 +4,9 @@ import SignInPage from './Components/SignInPage';
 import StudentNewUser from './Components/StudentNewUser';
 import AdminDashboard from './Components/AdminDashboard';
 import StudentDashboard from './Components/StudentDashboard';
-import TraineeDashboard from './Components/TraineeDashboard';
+import TraineeDashboard from './Components/TeacherDashboard';
+import StudentsSection from './Components/StudentsSection';
+import BatchDashboard from './Components/BatchDashboard';
 
 function App() {
   return (
@@ -14,7 +16,9 @@ function App() {
     <Route path="/student-new-user" element={<StudentNewUser />} />
     <Route path="/AdminDashboard" element={<AdminDashboard />}/>
     <Route path="/studentDashboard" element={<StudentDashboard />} />
-    <Route path="traineeDashboard" element={<TraineeDashboard />} />
+    <Route path="/traineeDashboard" element={<TraineeDashboard />} />
+    <Route paath="/StudentsSection" elemenmt={<StudentsSection />} />
+    {/* //<Route paath="/BatchDashboard" elemenmt={<BatchDashboard />} /> */}
     </Routes>
    </Router>
   );

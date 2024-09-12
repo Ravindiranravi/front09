@@ -88,94 +88,99 @@
 
 // export default SignInPage;
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './SignInPage.css';
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+import "./SignInPage.css";
 
 const SignInPage = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [role, setRole] = useState('student'); // Default role set to 'student'
-    const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("Student");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const navigate = useNavigate(); // Hook for navigation
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
+  const handleLogin = async (e) => {
+    e.preventDefault();
 
-        try {
-            const response = await axios.post('http://localhost:5078/api/Authentication/signin', {
-                Username: username,
-                Password: password,
-                Role: role
-            });
+    if (!username || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
 
-            const { redirectUrl } = response.data; // Assuming backend sends back the redirect URL
+    try {
+      const response = await axios.post("https://localhost:7256/api/Login", {
+        username,
+        password,
+        role,
+      });
 
-            if (redirectUrl) {
-                localStorage.setItem("username",response.data.id)
-                navigate(redirectUrl);
-            } else {
-                alert('Invalid username or password');
-            }
-        } catch (error) {
-            console.error('Error during sign-in:', error);
-            alert('An error occurred during sign-in.');
-        }
-    };
+      const { Token } = response.data;
+      localStorage.setItem("token", Token);
+      setSuccess(`Login successful! Welcome ${response.data.Username}`);
+      setError("");
 
-    // Navigate to the StudentNewUser form
-    const handleNewUserClick = () => {
-        navigate("/student-new-user" ); // Assuming the route for StudentNewUser form is '/studentnewuser'
-    };
+      if (role === "Admin") {
+        window.location.href = "/admindashboard";
+      } else if (role === "Student") {
+        window.location.href = "/studentdashboard";
+      } else if (role === "Teacher") {
+        window.location.href = "/traineedashboard";
+      }
+    } catch (err) {
+      setError(err.response?.data || "Login failed. Please try again.");
+    }
+  };
 
-    return (
-        <div className="container">
-            <div className="form-wrapper">
-                <h1>Sign In</h1>
-                <form onSubmit={handleSubmit}>
-                    <label htmlFor="username">Username or Email:</label>
-                    <input
-                        type="text"
-                        id="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
+  const handleNewUser = () => {
+    navigate("/register"); // Navigate to NewUserForm
+  };
 
-                    <label htmlFor="password">Password:</label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-
-                    <label htmlFor="role">Login As:</label>
-                    <select
-                        id="role"
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                    >
-                        <option value="student">Student</option>
-                        <option value="trainee">Trainee</option>
-                        <option value="admin">Admin</option>
-                    </select>
-
-                    <button type="submit">Submit</button>
-                </form>
-
-                {/* New User button below the form */}
-                <button onClick={handleNewUserClick} className="new-user-btn">
-                    New User
-                </button>
-            </div>
+  return (
+    <div className="signin-container">
+      <h2>Sign In</h2>
+      <form onSubmit={handleLogin}>
+        <div>
+          <label htmlFor="username">Username:</label>
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
         </div>
-    );
+        <div>
+          <label htmlFor="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="role">Role:</label>
+          <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
+            <option value="Student">Student</option>
+            <option value="Teacher">Teacher</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
+        <button type="submit">Sign In</button>
+        <button type="button" className="new-user-button" onClick={handleNewUser}>
+          New User? Register here
+        </button>
+      </form>
+    </div>
+  );
 };
 
 export default SignInPage;
-
 
 
 
